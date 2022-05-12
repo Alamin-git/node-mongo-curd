@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const ObjectId = require('mongodb').ObjectId;
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -27,12 +28,46 @@ async function run(){
             res.send(result);
         })
         // 5. GET user: mongodb theke data server site a lode korar jonno 
-        app.get('/user', async(req,res) => {
+        app.get('/users', async(req,res) => {
             const query = {};
             const cursor = userCollection.find(query);
             const users = await cursor.toArray();
             res.send(users);
         })
+
+        // Delete user 
+        app.delete('/user/:id', async(req,res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await userCollection.deleteOne(query);
+            res.send(result);
+        })
+
+
+        // update a single user 
+        app.get('/user/:id', async(req,res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await userCollection.findOne(query);
+            res.send(result);
+        })
+
+        // final update by update button
+        app.put('/user/:id', async(req,res) =>{
+            const id = req.params.id;
+            const updatedUser = req.body;
+            const filter = {_id: ObjectId(id)};
+            const options = { upsert: true };
+            const updateDoc ={
+                $set: {
+                    name: updatedUser.name,
+                    email: updatedUser.email
+                }
+            };
+            const result = await userCollection.updateOne(filter,updateDoc,options);
+            res.send(result);
+        })
+
     }
     finally{
         // await client.close();
